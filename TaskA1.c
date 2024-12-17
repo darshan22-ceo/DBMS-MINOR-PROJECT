@@ -1,107 +1,66 @@
 #include <stdio.h> 
 #include <stdlib.h> 
-#include <fcntl.h> // For file control operations like open()
-#include <unistd.h> // For Unix system calls like read(), write(), close()
-#include <string.h> 
-void demonstrateSystemCalls(); 
-void demonstrateCLibraryFunctions(); 
-int main()
-{
-printf("File Operations in Unix OS using System Calls and C Library\n");
-demonstrateSystemCalls();
-demonstrateCLibraryFunctions();
-return 0;
-}
-void demonstrateSystemCalls()
-{
-printf("\n1. Demonstrating Unix System Calls:\n");
-int fileDescriptor; 
-char *fileName = "system_call_example.txt"; 
+#include <fcntl.h>    // for open, O_RDONLY, O_WRONLY, O_CREAT, O_APPEND 
+#include <unistd.h>   // for close, read, write, unlink 
+#include <string.h>   // for strlen 
+#include <errno.h>    // for error handling 
+int main() { 
+int file_desc; 
+ssize_t bytes_written, bytes_read; 
 char buffer[100]; 
-ssize_t bytesRead; 
-// Create and open a file using 'open' system call
-fileDescriptor = open(fileName, O_WRONLY | O_CREAT , 0644);
-if (fileDescriptor < 0)
-{ 
-("Error opening file using system call");
-exit(0);
-}
-printf("File '%s' created and opened using system call 'open'.\n", fileName);
-// Write text to the file using 'write' system call
-char *text = "Hello, this is a sample text written using Unix system calls.\n";
-if (write(fileDescriptor, text, strlen(text)) < 0)
-{ 
-perror("Error writing to file using system call");
-exit(0);
-}
-printf("Text written to file using system call 'write'.\n");
-if (close(fileDescriptor) < 0)
-{ 
-perror("Error closing file using system call");
-exit(0);
-}
-printf("File closed using system call 'close'.\n");
-// Reopen the file in read mode using 'open' system call
-fileDescriptor = open(fileName, O_RDONLY);
-if (fileDescriptor < 0)
-{ 
-perror("Error opening file for reading using system call");
-exit(0);
-}
-printf("File '%s' opened for reading using system call 'open'.\n", fileName);
-bytesRead = read(fileDescriptor, buffer, sizeof(buffer) - 1);
-if (bytesRead < 0)
-{ 
-perror("Error reading from file using system call");
-exit(0);
-}
-buffer[bytesRead] = '\0'; // Null-terminate the string to print
-printf("Text read from file: %s\n", buffer);
-// Close the file again
-if (close(fileDescriptor) < 0)
-{ 
-perror("Error closing file after reading using system call");
-exit(0);
-}
-printf("File closed after reading using system call 'close'.\n");
-}
-void demonstrateCLibraryFunctions()
-{
-printf("\n2. Demonstrating C Library Functions:\n");
-FILE *filePointer; 
-char *fileName = "c_library_example.txt"; 
-char buffer[100]; 
-// Open the file using 'fopen' in write mode
-filePointer = fopen(fileName, "w");
-if (filePointer == NULL)
-{ 
-perror("Error opening file using C library");
-exit(0);
-}
-printf("File '%s' created and opened using C library function 'fopen'.\n", fileName);
-fprintf(filePointer, "Hello, this is a sample text written using C library functions.\n");
-printf("Text written to file using C library function 'fprintf'.\n");
-if (fclose(filePointer) != 0)
-{ 
-perror("Error closing file using C library");
-exit(0);
-}
-printf("File closed using C library function 'fclose'.\n");
-filePointer = fopen(fileName, "r");
-if (filePointer == NULL)
-{ 
-perror("Error opening file for reading using C library");
-exit(0);
-}
-printf("File '%s' opened for reading using C library function 'fopen'.\n", fileName);
-if (fgets(buffer, sizeof(buffer), filePointer) != NULL)
-{
-printf("Text read from file: %s\n", buffer);
-}
-if (fclose(filePointer) != 0)
-{ 
-perror("Error closing file after reading using C library");
-exit(0);
-}
-printf("File closed after reading using C library function 'fclose'.\n");
-}
+ 
+// 1. Creating and opening a file using 'open' system call 
+file_desc = open("testfile.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644); 
+if (file_desc < 0) { 
+perror("Error opening file"); 
+exit(EXIT_FAILURE);} 
+printf("File created and opened successfully.\n"); 
+// 2. Writing to the file using 'write' system call 
+const char *data = "Hello, this is a test for file operations in Unix using system calls.\n"; 
+bytes_written = write(file_desc, data, strlen(data)); 
+if (bytes_written < 0) { 
+perror("Error writing to file"); 
+close(file_desc); 
+exit(EXIT_FAILURE);
+} 
+printf("%ld bytes written to file.\n", bytes_written); 
+ 
+// 3. Closing the file using 'close' system call 
+if (close(file_desc) < 0) { 
+perror("Error closing file"); 
+exit(EXIT_FAILURE); 
+} 
+printf("File closed successfully.\n"); 
+ 
+// 4. Re-opening the file in read mode 
+file_desc = open("testfile.txt", O_RDONLY); 
+if (file_desc < 0) { 
+perror("Error reopening file"); 
+exit(EXIT_FAILURE); 
+} 
+printf("File reopened in read mode.\n"); 
+ 
+// 5. Reading the contents of the file using 'read' system call 
+bytes_read = read(file_desc, buffer, sizeof(buffer) - 1); 
+if (bytes_read < 0) { 
+perror("Error reading file"); 
+close(file_desc); 
+exit(EXIT_FAILURE); 
+} 
+buffer[bytes_read] = '\0'; // Null terminate the string 
+printf("File content:\n%s\n", buffer);
+// 6. Closing the file again 
+if (close(file_desc) < 0) { 
+perror("Error closing file"); 
+exit(EXIT_FAILURE); 
+} 
+printf("File closed after reading.\n"); 
+ 
+// 7. Deleting the file using 'unlink' system call 
+if (unlink("testfile.txt") < 0) { 
+perror("Error deleting file"); 
+exit(EXIT_FAILURE); 
+} 
+printf("File deleted successfully.\n"); 
+return 0; 
+} 
